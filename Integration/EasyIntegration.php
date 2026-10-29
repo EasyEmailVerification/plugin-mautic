@@ -32,7 +32,6 @@ class EasyIntegration extends AbstractIntegration
      */
     public function getRequiredKeyFields()
     {
-        // Do not rename field. easy.js depends on it
         return [
             'apikey' => 'mautic.integration.easy.apikey',
         ];
@@ -66,16 +65,13 @@ class EasyIntegration extends AbstractIntegration
         }
     }
 
-    public function shouldAutoUpdate()
-    {
-        $featureSettings = $this->getKeys();
-
-        return (isset($featureSettings['auto_update'])) ? (bool) $featureSettings['auto_update'] : false;
-    }
-
-    public function getKeys(): ?string
+    /**
+     * Not named getKeys(): that is AbstractIntegration's method returning all the decrypted keys as an array.
+     */
+    public function getApiKey(): ?string
     {
         $keys = $this->getDecryptedApiKeys();
+
         return $keys['apikey'] ?? null;
     }
 
@@ -96,24 +92,5 @@ class EasyIntegration extends AbstractIntegration
         }
 
         return parent::getFormNotes($section);
-    }
-
-    public function saveConfig(array $config)
-    {
-        // Validate safe_to_send and result
-        if (isset($config['safe_to_send']) && isset($config['result']) && $config['safe_to_send'] && $config['result']) {
-            // If both are true, set 'result' to false
-            $config['result'] = false;
-        }
-
-        // Save safe to send checkbox
-        if (isset($config['safe_to_send'])) {
-            $this->setIntegrationConfig('safe_to_send', $config['safe_to_send']);
-        }
-
-        // Save result checkbox
-        if (isset($config['result'])) {
-            $this->setIntegrationConfig('result', $config['result']);
-        }
     }
 }

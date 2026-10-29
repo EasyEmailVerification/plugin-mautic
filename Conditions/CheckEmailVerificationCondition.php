@@ -82,7 +82,7 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
             return false;
         }
 
-        $this->apikey = $integration->getKeys();
+        $this->apikey = $integration->getApiKey();
         if (!$this->apikey) {
             $this->logger->error('Easy Email Verification: API key is missing.');
 
