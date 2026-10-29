@@ -6,21 +6,6 @@ return [
     'version'     => '1.0',
     'author'      => 'Easy Email Verification',
 
-    'routes' => [
-        'public' => [
-            'mautic_plugin_easy_index' => [
-                'path'       => '/easy/callback',
-                'controller' => 'MauticEasyBundle:Public:callback',
-            ],
-        ],
-        'main' => [
-            'mautic_plugin_easy_action' => [
-                'path'       => '/easy/{objectAction}/{objectId}',
-                'controller' => 'MauticEasyBundle:Easy:execute',
-            ],
-        ],
-    ],
-
     'services' => [
         'events' => [
             'mautic.plugin.easy.campaign.condition.email_verification' => [
@@ -68,28 +53,6 @@ return [
 
     'parameters' => [
         'mautic_plugin_easy_apikey' => 'your_saved_api_key', // Replace this with the actual API key
-    ],
-
-    'menu' => [
-        'main' => [
-            'items' => [
-                'plugin.easy' => [
-                    'route'    => 'mautic_plugin_easy_index',
-                    'access'   => ['plugin:easy:view'],
-                    'parent'   => 'mautic.plugin',
-                    'priority' => 10,
-                ],
-            ],
-        ],
-    ],
-
-    'menuItems' => [
-        'plugin.easy' => [
-            'route'    => 'mautic_plugin_easy_index',
-            'access'   => ['plugin:easy:view'],
-            'parent'   => 'mautic.plugin',
-            'priority' => 10,
-        ],
     ],
 
     'settings' => [

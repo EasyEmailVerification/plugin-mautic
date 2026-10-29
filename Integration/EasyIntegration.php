@@ -6,7 +6,6 @@ use Mautic\CoreBundle\Form\Type\YesNoButtonGroupType;
 use Mautic\PluginBundle\Integration\AbstractIntegration;
 use Symfony\Component\Form\Form;
 use Symfony\Component\Form\FormBuilder;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class EasyIntegration extends AbstractIntegration
 {
@@ -92,13 +91,7 @@ class EasyIntegration extends AbstractIntegration
         if ('custom' === $section) {
             return [
                 'template'   => 'MauticEasyBundle:Integration:form.html.php',
-                'parameters' => [
-                    'mauticUrl' => $this->router->generate(
-                        'mautic_plugin_easy_index',
-                        [],
-                        UrlGeneratorInterface::ABSOLUTE_URL
-                    ),
-                ],
+                'parameters' => [],
             ];
         }
 
