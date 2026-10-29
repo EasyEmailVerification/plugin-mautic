@@ -1,108 +1,151 @@
-# Mautic Easy Email Verification Plugin
+# Easy Email Verification for Mautic
 
-This plugin integrates Mautic with the Easy Email Verification service to verify email addresses within your Mautic campaigns.
+Verify email addresses inside Mautic campaigns with [Easy Email Verification](https://www.easyemailverification.com).
+The plugin adds a campaign **condition** that checks the contact's address and stores the result in contact
+fields, so a campaign can continue for deliverable addresses and handle the others (tag, remove, skip, ...).
+Each verification uses one credit.
 
-## More Information
+Step-by-step setup guide: https://www.easyemailverification.com/mautic.md
 
-For more information about the Easy Email Verification service, please visit: [Easy Email Verification](https://www.easyemailverification.com)
+## Compatibility
+
+Plugin versions follow [semantic versioning](https://semver.org/) and are independent of Mautic's version
+numbers. Each major version targets one Mautic line:
+
+| Plugin | Mautic | PHP | Branch |
+|--------|--------|-----|--------|
+| 1.x    | 4.4    | 7.4 – 8.0 | `1.x` |
+| 2.x    | 7      | 8.2+ | `main` (upcoming) |
+
+Version 1.x does not run on Mautic 5 or later. Mautic 4.4 itself is no longer maintained by the Mautic
+project; plan an upgrade to Mautic 7 and plugin 2.x.
 
 ## Installation
 
-Follow these steps to install the Mautic Easy Email Verification plugin:
+### With Composer
 
-1. Copy the zip file to the `plugins/` directory of your Mautic installation.
+In a Composer-based Mautic 4.4 installation:
 
-    ```sh
-    cp MauticEasyBundle.zip /path/to/mautic/plugins/
-    ```
+```sh
+composer require easyemailverification/plugin-mautic:^1.0
+php bin/console cache:clear
+php bin/console mautic:plugins:reload
+```
 
-    If you are using Docker:
+Composer installs the plugin as `docroot/plugins/MauticEasyBundle` (the plugin directory of the
+`mautic/recommended-project` layout).
 
-    ```sh
-    docker cp MauticEasyBundle.zip mautic:/var/www/html/plugins
-    ```
+### From the zip file
 
-2. Unzip the plugin file.
+1. Download `MauticEasyBundle-vX.Y.Z.zip` from the
+   [latest release](https://github.com/EasyEmailVerification/plugin-mautic/releases).
+2. Unzip it into Mautic's `plugins/` directory, so that `plugins/MauticEasyBundle/MauticEasyBundle.php` exists,
+   and give the folder to the web server user:
 
-    ```sh
-    unzip MauticEasyBundle.zip
-    ```
+   ```sh
+   cd /path/to/mautic/plugins
+   unzip MauticEasyBundle-vX.Y.Z.zip
+   chown -R www-data:www-data MauticEasyBundle
+   ```
 
-3. Set the correct permissions for the plugin directory.
+   With the official Docker image (container named `mautic`):
 
-    ```sh
-    chown -R www-data:www-data MauticEasyBundle
-    chmod 775 -R MauticEasyBundle
-    ```
+   ```sh
+   docker cp MauticEasyBundle-vX.Y.Z.zip mautic:/var/www/html/plugins/
+   docker exec -w /var/www/html/plugins mautic sh -c 'unzip MauticEasyBundle-vX.Y.Z.zip && chown -R www-data:www-data MauticEasyBundle'
+   ```
 
-4. Clear the Mautic cache to recognize the new plugin.
+3. Clear the cache and register the plugin:
 
-    ```sh
-    cd /path/to/mautic
-    php /var/www/html/bin/console cache:clear --env=prod
-    ```
-    
-5. Install the plugin via the Mautic UI.
+   ```sh
+   php bin/console cache:clear
+   php bin/console mautic:plugins:reload
+   ```
 
-    - Go to the Mautic UI.
-    - Click the gear icon and select "Plugins" (or go to [http://localhost:8080/s/plugins](http://localhost:8080/s/plugins)).
-    - Click the "Install/Upgrade Plugins" button.
+   or, in Mautic, open **Settings (gear icon) → Plugins** and click **Install/Upgrade Plugins**.
 
+## Configuration
 
-## Usage
+1. Create an account at the [Easy Email Verification dashboard](https://dashboard.easyemailverification.com/register).
+2. In the dashboard, open **Integration → API Settings** and click **Create API Key**.
+   Use an **API key**: a widget key does not work with the plugin.
+3. In Mautic, open **Settings → Plugins → Easy**, paste the key, set **Published** to *Yes* and save.
+4. In the **Features** tab, choose what decides the condition:
+   - **Use the field 'Safe To Send' for decision** (default): the address passes only when the API reports it as
+     safe to send. This is the stricter option: it also fails disposable, risky and unknown addresses.
+   - **Use the field Result for decision**: the address passes unless the result is `invalid` or `unknown`.
+     Accept-all (catch-all) addresses are reported as `valid` and pass.
 
-Once installed, the Easy Email Verification plugin will add new conditions to your Mautic campaigns. You can use these to verify email addresses and make decisions based on the verification results.
+### Testing without credits
 
-### Free Email Verification
+The sandbox API key `eev_sandbox_key` answers without using credits, for addresses at
+`sandbox.easyemailverification.com` only:
 
-When you create an account at [Easy Email Verification Dashboard](https://dashboard.easyemailverification.com/login), you will receive 50 free email verifications. Use these to test and validate the integration with your Mautic instance.
+| Address | result | safe_to_send |
+|---------|--------|--------------|
+| `valid@sandbox.easyemailverification.com` | valid | true |
+| `disposable@sandbox.easyemailverification.com` | valid | false |
+| `catchall@sandbox.easyemailverification.com` | valid | false |
+| `invalid@sandbox.easyemailverification.com` | invalid | false |
+| `unknown@sandbox.easyemailverification.com` | unknown | false |
 
-### Generating an API Key
+## Campaign condition
 
-To use the plugin, you need to generate an API Key:
+In the campaign builder, add the **Easy Email Verification** condition and connect its two paths: the "yes" path
+for addresses that pass and the "no" path for the others.
 
-1. Log in to your account at the [Easy Email Verification Dashboard](https://dashboard.easyemailverification.com).
-2. Navigate to the API section.
-3. Generate a new API key.
-4. Copy the API key and paste it into the plugin interface within your Mautic instance.
+- A contact verified less than **30 days** ago is not verified again: the stored result is reused, so no
+  credit is spent. The result is verified again when the contact's address moves to another domain.
+- A contact without an email address takes the "no" path.
+- When the API cannot answer (timeout, connection error, invalid API key, no credits left), the contact takes the
+  "no" path, its fields are left unchanged and the error is written to Mautic's log. It is verified again the next
+  time a campaign reaches the condition.
 
-### Custom Fields
+## Contact fields
 
-The plugin creates the following custom fields in Mautic to store the results of email verifications:
+On the first evaluation the plugin creates these contact fields (group *Core*) and fills them with the API answer:
 
-- `eev_result`
-- `eev_reason`
-- `eev_disposable`
-- `eev_accept_all`
-- `eev_role`
-- `eev_free`
-- `eev_domain`
-- `eev_mx_record`
-- `eev_mx_domain`
-- `eev_safe_to_send`
-- `eev_did_you_mean`
-- `eev_success`
-- `eev_message`
-- `eev_http_code`
-- `eev_validate_time`
-
-### Email Verification Conditions
-
-You can add conditions related to email verification in the campaign builder to check if an email is verified using the Easy Email Verification service.
-
-### Validity Criteria
-
-The plugin allows you to decide whether an email will be considered valid based on either the `result` field or the `safe_to_send` field:
-
-- **Result**: This field indicates the overall result of the email verification. A value of 'valid' means the email address is considered valid by the verification service. An email accept_all is considered valid.
-- **Safe to Send**: This field indicates whether the email address is safe to send emails to. It considers factors such as deliverability and risk of the email address.
+| Field | Content |
+|-------|---------|
+| `eev_result` | `valid`, `invalid` or `unknown` (no reliable answer: neither valid nor invalid) |
+| `eev_reason` | reason for the result |
+| `eev_safe_to_send` | overall recommendation (`true`/`false`) |
+| `eev_disposable` | disposable address (`true`/`false`) |
+| `eev_accept_all` | the domain accepts any address (`true`/`false`) |
+| `eev_role` | role address such as `info@` (`true`/`false`) |
+| `eev_free` | free email provider (`true`/`false`) |
+| `eev_domain` | domain of the address |
+| `eev_mx_record` | mail server |
+| `eev_mx_domain` | domain of the mail server |
+| `eev_did_you_mean` | suggested correction for a typo |
+| `eev_success` | the API answered (`true`/`false`) |
+| `eev_message` | message from the API |
+| `eev_http_code` | HTTP code of the API answer |
+| `eev_validate_time` | date and time of the verification |
 
 ## Troubleshooting
 
-If you encounter any issues with the plugin, please ensure that:
+- **The plugin does not appear in Settings → Plugins**: check that the folder is named exactly
+  `MauticEasyBundle`, that it contains `MauticEasyBundle.php`, and that the web server user owns it; then clear the
+  cache and click **Install/Upgrade Plugins** again.
+- **Every contact takes the "no" path**: look for `Easy Email Verification` in Mautic's log (`var/logs/`).
+  `API error (HTTP 401)` means the API key is wrong (or is a widget key); `API key is missing` means none is saved.
+- **"Running out of your credit limit"**: see the [plans](https://www.easyemailverification.com/en-US/pricing).
+- **The condition does not appear in the campaign builder**: clear the cache after installing or updating.
 
-1. The plugin directory has the correct permissions.
-2. The Mautic cache has been cleared.
-3. The Easy Email Verification service API key is correctly configured in the plugin settings.
+Still stuck? Write to support@easyemailverification.com or
+[open an issue](https://github.com/EasyEmailVerification/plugin-mautic/issues).
 
-For additional support, refer to the Easy Email Verification service documentation or the Mautic community forums.
+## Development
+
+```sh
+composer install
+vendor/bin/phpunit
+vendor/bin/phpstan analyse
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Security issues: see [SECURITY.md](SECURITY.md).
+
+## License
+
+GPL-3.0-or-later. See [LICENSE](LICENSE).
