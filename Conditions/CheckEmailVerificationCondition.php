@@ -19,6 +19,11 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
 {
     public const ON_EVALUATE = 'mautic.plugin.easy.on_email_verification_condition';
 
+    /**
+     * A stored result younger than this is reused instead of calling the API again (30 days).
+     */
+    public const REUSE_SECONDS = 2592000;
+
     private $integrationHelper;
     private $apikey;
     private $leadModel;
@@ -149,22 +154,21 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
         // Get the email address of the lead
         $email = $lead->getEmail();
 
-        $fields = $lead->getProfileFields();
-
-        // Check if the condition has already been evaluated within the last 2 minutes
-        if (isset($fields['eev_validate_time']) && !empty($fields['eev_validate_time'])) {
-            $lastValidationTime = strtotime($fields['eev_validate_time']);
-            if (time() - $lastValidationTime < 120) {
-                $this->logger->debug('Easy Email Verification: recently checked, contact ' . $lead->getId());
-                return;
-            }
-        }
-
         if (!$email) {
             $this->logger->debug('Easy Email Verification: contact ' . $lead->getId() . ' has no email address');
             $event->setResult(false);
 
             return false;
+        }
+
+        // A recent result of this contact is reused: each verification spends a credit
+        $stored = $this->getRecentVerification($lead->getProfileFields(), $email);
+        if (null !== $stored) {
+            $this->logger->debug('Easy Email Verification: reusing the recent result of contact ' . $lead->getId());
+            $isVerified = $this->isVerified($stored);
+            $event->setResult($isVerified);
+
+            return $isVerified;
         }
 
         $verificationData = $this->checkEmailVerification($email);
@@ -202,6 +206,22 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
             $this->logger->error('Easy Email Verification: could not save the result of contact ' . $lead->getId() . ': ' . $e->getMessage());
         }
 
+        $isVerified = $this->isVerified($verificationData);
+
+        // Set the result to the event
+        $event->setResult($isVerified);
+
+        $this->logger->debug('Easy Email Verification: contact ' . $lead->getId() . ' ' . ($isVerified ? 'passed' : 'failed'));
+
+        return $isVerified;
+    }
+
+
+    /**
+     * @param array<string, mixed> $verificationData API answer (or the stored eev_ fields, as API keys)
+     */
+    private function isVerified(array $verificationData): bool
+    {
         $isVerified = true;
 
         if ($this->result) {
@@ -216,16 +236,43 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
             }
         }
 
-
-
-        // Set the result to the event
-        $event->setResult($isVerified);
-
-        $this->logger->debug('Easy Email Verification: contact ' . $lead->getId() . ' ' . ($isVerified ? 'passed' : 'failed'));
-
         return $isVerified;
     }
 
+    /**
+     * The contact's stored result, as API keys, when it was verified less than REUSE_SECONDS ago.
+     * The verified address itself is not stored, so the stored domain must match the current address:
+     * a contact whose address moved to another domain is verified again.
+     *
+     * @param array<string, mixed> $fields contact profile fields
+     *
+     * @return array<string, mixed>|null
+     */
+    private function getRecentVerification(array $fields, string $email): ?array
+    {
+        if (empty($fields['eev_result']) || empty($fields['eev_validate_time'])) {
+            return null;
+        }
+
+        $verifiedAt = strtotime($fields['eev_validate_time']);
+        if (false === $verifiedAt || time() - $verifiedAt >= self::REUSE_SECONDS) {
+            return null;
+        }
+
+        $domain = strtolower((string) substr(strrchr($email, '@') ?: '', 1));
+        if (strtolower((string) ($fields['eev_domain'] ?? '')) !== $domain) {
+            return null;
+        }
+
+        $stored = [];
+        foreach (self::CUSTOM_FIELDS as $field => $responseField) {
+            if (isset($fields[$field])) {
+                $stored[$responseField] = $fields[$field];
+            }
+        }
+
+        return $stored;
+    }
 
     /**
      * @return array<string, mixed>|null the API answer, or null when there is none: request error, timeout,
