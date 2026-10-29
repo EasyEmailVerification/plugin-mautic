@@ -1,0 +1,131 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  # PHP extensions Mautic 4.4 and its dependencies need
+  PHP_EXTENSIONS: bcmath, curl, gd, imap, intl, mbstring, pdo_mysql, sockets, zip
+
+jobs:
+  validate:
+    name: composer validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.0'
+          tools: composer:v2
+          coverage: none
+      - run: composer validate --strict
+
+  lint:
+    name: PHP lint ${{ matrix.php }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: ['7.4', '8.0']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+      - name: Lint every PHP file
+        run: |
+          find . -name '*.php' -not -path './vendor/*' -print0 \
+            | xargs -0 -n1 php -l > lint.log || { grep -v '^No syntax errors' lint.log; exit 1; }
+          echo "$(grep -c '^No syntax errors' lint.log) files OK"
+
+  tests:
+    name: PHPUnit and PHPStan (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: ['7.4', '8.0']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: ${{ env.PHP_EXTENSIONS }}
+          tools: composer:v2
+          coverage: none
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/composer/files
+          key: composer-${{ matrix.php }}-${{ hashFiles('composer.json') }}
+      - run: composer install --no-interaction --no-progress
+      - run: vendor/bin/phpunit
+      - run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
+
+  integration:
+    name: Install in Mautic 4.4
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: mautic
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: plugin
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.0'
+          extensions: ${{ env.PHP_EXTENSIONS }}
+          tools: composer:v2
+          coverage: none
+
+      - name: Install Mautic 4.4 with Composer
+        run: |
+          composer create-project mautic/recommended-project:^4.4 mautic --no-install --no-interaction
+          cd mautic
+          # The 4.4 project predates Composer's allow-plugins and security blocking
+          php -r '$f = "composer.json"; $j = json_decode(file_get_contents($f), true);
+            $j["config"]["allow-plugins"] = true; $j["config"]["audit"]["block-insecure"] = false;
+            file_put_contents($f, json_encode($j, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));'
+          composer install --no-interaction --no-progress
+          php bin/console mautic:install http://localhost --force \
+            --db_driver=pdo_mysql --db_host=127.0.0.1 --db_port=3306 --db_name=mautic \
+            --db_user=root --db_password=root --db_backup_tables=false \
+            --admin_username=admin --admin_email=admin@example.com --admin_password=CI-Admin-123 \
+            --admin_firstname=CI --admin_lastname=Admin
+          grep -o '"version": *"[^"]*"' docroot/app/release_metadata.json
+
+      - name: Copy the plugin as in the release zip
+        run: |
+          mkdir -p mautic/docroot/plugins/MauticEasyBundle
+          git -C plugin archive HEAD | tar -x -C mautic/docroot/plugins/MauticEasyBundle
+          ls mautic/docroot/plugins/MauticEasyBundle
+
+      - name: Clear the cache and install the plugin
+        working-directory: mautic
+        run: |
+          php bin/console cache:clear
+          php bin/console mautic:plugins:reload | tee reload.log
+          php bin/console debug:event-dispatcher mautic.plugin.easy.on_email_verification_condition \
+            | grep -q 'CheckEmailVerificationCondition::onConditionValidate'
+
+      - name: Check the installed plugin
+        working-directory: mautic
+        run: |
+          expected=$(php -r '$c = include "docroot/plugins/MauticEasyBundle/Config/config.php"; echo $c["version"];')
+          installed=$(mysql -h127.0.0.1 -uroot -proot mautic -N -e "select version from plugins where bundle = 'MauticEasyBundle' and is_missing = 0")
+          echo "expected $expected, installed '$installed'"
+          test "$installed" = "$expected"
+          if grep -rh 'MauticEasyBundle' var/logs/ 2>/dev/null | grep -E 'CRITICAL|ERROR'; then exit 1; fi

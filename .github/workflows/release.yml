@@ -1,0 +1,51 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the tag matches the plugin and changelog versions
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+          grep -q "'version' *=> *'$version'" Config/config.php \
+            || { echo "Config/config.php does not declare version $version"; exit 1; }
+          grep -q "^## \[$version\]" CHANGELOG.md \
+            || { echo "CHANGELOG.md has no section for $version"; exit 1; }
+
+      - name: Build MauticEasyBundle-v${{ env.VERSION }}.zip
+        run: |
+          # git archive leaves out the export-ignore paths (Tests/, .github/, dev files)
+          mkdir -p build/MauticEasyBundle
+          git archive HEAD | tar -x -C build/MauticEasyBundle
+          cd build
+          zip -qr "MauticEasyBundle-v$VERSION.zip" MauticEasyBundle
+          unzip -l "MauticEasyBundle-v$VERSION.zip"
+
+      - name: Release notes from CHANGELOG.md
+        run: |
+          awk -v v="$VERSION" '
+            $0 ~ "^## \\[" v "\\]" { found = 1; next }
+            found && /^## \[/ { exit }
+            found && /^\[[^]]+\]: / { exit }
+            found { print }
+          ' CHANGELOG.md > build/notes.md
+          test -s build/notes.md
+          cat build/notes.md
+
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" "build/MauticEasyBundle-v$VERSION.zip" \
+            --title "v$VERSION" --notes-file build/notes.md --verify-tag

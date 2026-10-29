@@ -1,0 +1,63 @@
+name: Bug report
+description: Something in the plugin does not work as documented.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Do not paste API keys or contact data.
+        Security vulnerabilities: email support@easyemailverification.com instead (see SECURITY.md).
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Plugin version
+      description: Settings → Plugins → Easy, or the release you installed.
+      placeholder: 1.0.2
+    validations:
+      required: true
+  - type: input
+    id: mautic-version
+    attributes:
+      label: Mautic version
+      placeholder: 4.4.12
+    validations:
+      required: true
+  - type: input
+    id: php-version
+    attributes:
+      label: PHP version
+      placeholder: "8.0.30"
+    validations:
+      required: true
+  - type: dropdown
+    id: install-method
+    attributes:
+      label: Installation method
+      options:
+        - Zip file
+        - Composer
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Create a campaign with the Easy Email Verification condition
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log lines
+      description: Lines with "Easy Email Verification" from Mautic's log (var/logs/), with emails and keys removed.
+      render: text

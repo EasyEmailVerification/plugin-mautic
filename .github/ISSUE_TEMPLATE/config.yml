@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/EasyEmailVerification/plugin-mautic/blob/main/SECURITY.md
+    about: Report vulnerabilities privately by email, not in an issue.
+  - name: Account, API key or credits
+    url: https://www.easyemailverification.com/mautic.md
+    about: Setup guide; for account and billing questions write to support@easyemailverification.com.
