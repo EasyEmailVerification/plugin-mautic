@@ -3,7 +3,7 @@
 return [
     'name'        => 'Easy Email Verification Integration',
     'description' => 'Integrates Mautic with the Easy Email Verification service to verify email addresses and ensure their validity within campaigns.',
-    'version'     => '1.0',
+    'version'     => '1.0.2',
     'author'      => 'Easy Email Verification',
 
     'services' => [
