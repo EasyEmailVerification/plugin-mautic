@@ -3,6 +3,7 @@
 namespace MauticPlugin\MauticEasyBundle\Conditions;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\GuzzleException;
 use Mautic\CampaignBundle\Event\ConditionEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -33,6 +34,11 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
     private $logger;
 
     /**
+     * @var ClientInterface
+     */
+    private $httpClient;
+
+    /**
      * @var bool the eev_ fields were checked in this process
      */
     private $fieldsChecked = false;
@@ -61,12 +67,14 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
         IntegrationHelper $integrationHelper,
         LeadModel $leadModel,
         FieldModel $fieldModel,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        ?ClientInterface $httpClient = null
     ) {
         $this->integrationHelper = $integrationHelper;
         $this->leadModel         = $leadModel;
         $this->fieldModel        = $fieldModel;
         $this->logger            = $logger;
+        $this->httpClient        = $httpClient ?: new Client();
     }
 
     /**
@@ -280,11 +288,10 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
      */
     private function checkEmailVerification(string $email): ?array
     {
-        $client = new Client();
-        $url    = 'https://api.easyemailverification.com/v1/verify?' . http_build_query(['email' => $email]);
+        $url ='https://api.easyemailverification.com/v1/verify?' . http_build_query(['email' => $email]);
 
         try {
-            $response = $client->request('GET', $url, [
+            $response = $this->httpClient->request('GET', $url, [
                 'headers' => [
                     'Accept'    => 'application/json',
                     // in a header, not in the query string, so the key stays out of URLs, proxy and server logs
