@@ -160,8 +160,6 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
             }
         }
 
-        $this->logger->info('Updated field', ['field' => $field, 'value' => $value]);
-
         // Perform your email verification logic here and set the result
         $verificationData = $this->checkEmailVerification($email);
 
