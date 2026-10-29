@@ -12,9 +12,6 @@ use Mautic\LeadBundle\Model\FieldModel;
 use Mautic\LeadBundle\Entity\LeadField;
 use Psr\Log\LoggerInterface;
 
-use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
-
 use MauticPlugin\MauticEasyBundle\Integration\EasyIntegration;
 
 
@@ -55,7 +52,7 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
         FieldModel $fieldModel,
         LoggerInterface $logger
     ) {
-        $this->initializeLogger(); // Initialize the logger
+        $this->logger = $logger;
 
         $integration = $integrationHelper->getIntegrationObject('Easy');
 
@@ -74,7 +71,6 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
 
         $this->leadModel = $leadModel;
         $this->fieldModel = $fieldModel;
-        $this->logger = $logger;
 
         $this->safeToSend = $settings['safe_to_send'];
         $this->result = $settings['result'];
@@ -87,12 +83,6 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
     }
 
 
-    private function initializeLogger()
-    {
-        $this->logger = new Logger('mautic_test_logger');
-        $this->logger->pushHandler(new StreamHandler('/var/www/html/app/logs/mautic_test.log', Logger::DEBUG));
-    }
-
     public static function getSubscribedEvents()
     {
         return [
@@ -102,17 +92,11 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
 
     private function ensureCustomFieldsExist()
     {
-        $this->initializeLogger();
-        $this->logger->info('ensureCustomFieldsExist started.');
-
         $fields = $this->fieldModel->getFieldList();
         $existingFields = array_column($fields, 'alias');
 
         foreach (self::CUSTOM_FIELDS as $alias => $responseField) {
-            if (in_array($alias, $existingFields)) {
-                $this->logger->info('Field already exists: ' . $alias);
-            } else {
-                $this->logger->info('Creating field: ' . $alias);
+            if (!in_array($alias, $existingFields)) {
                 $field = new LeadField();
                 $field->setAlias($alias);
                 $field->setLabel('EEV_' . $responseField);
@@ -124,25 +108,18 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
 
                 try {
                     $this->fieldModel->saveEntity($field);
-                    $this->logger->info('Created field: ' . $alias);
+                    $this->logger->info('Easy Email Verification: created field ' . $alias);
                 } catch (\Exception $e) {
-                    $this->logger->error('Failed to create field: ' . $alias . '. Error: ' . $e->getMessage());
+                    $this->logger->error('Easy Email Verification: failed to create field ' . $alias . ': ' . $e->getMessage());
                 }
             }
         }
-
-        $this->logger->info('ensureCustomFieldsExist completed.');
     }
 
 
 
     public function onConditionValidate(ConditionEvent $event)
     {
-        $this->initializeLogger();
-
-        // Log that the method was called
-        $this->logger->info('onConditionValidate called.');
-
         // Get the lead (contact) from the event
         $lead = $event->getLead();
         // Get the email address of the lead
@@ -154,7 +131,7 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
         if (isset($fields['eev_validate_time']) && !empty($fields['eev_validate_time'])) {
             $lastValidationTime = strtotime($fields['eev_validate_time']);
             if (time() - $lastValidationTime < 120) {
-                $this->logger->info('Email verification recently checked for lead ID: ' . $lead->getId());
+                $this->logger->debug('Easy Email Verification: recently checked, contact ' . $lead->getId());
                 return;
             }
         }
@@ -176,7 +153,6 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
                 }
 
                 $lead->addUpdatedField($field, $value);
-                $this->logger->info('Updated field', ['field' => $field, 'value' => $value]);
             }
         }
 
@@ -188,7 +164,7 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
             // Save the lead
             $this->leadModel->saveEntity($lead);
         } catch (\Exception $e) {
-            $this->logger->error('Error to save the EEV data');
+            $this->logger->error('Easy Email Verification: could not save the result of contact ' . $lead->getId() . ': ' . $e->getMessage());
         }
 
         $isVerified = true;
@@ -210,7 +186,7 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
         // Set the result to the event
         $event->setResult($isVerified);
 
-        $this->logger->info('Email verification result: ' . $isVerified);
+        $this->logger->debug('Easy Email Verification: contact ' . $lead->getId() . ' ' . ($isVerified ? 'passed' : 'failed'));
 
         return $isVerified;
     }
@@ -237,12 +213,11 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
             $body = $response->getBody();
             $data = json_decode($body, true);
 
-            $this->logger->info('API Response: ' . $body);
-
             // Return the verification data
             return $data;
         } catch (RequestException $e) {
-            $this->logger->error('Email verification failed: ' . $e->getMessage());
+            // Not $e->getMessage(): it contains the request URL, with the email address and the API key
+            $this->logger->error('Easy Email Verification: request failed (' . get_class($e) . ', HTTP ' . $e->getCode() . ')');
             return true;
         }
     }
