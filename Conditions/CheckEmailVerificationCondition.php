@@ -27,6 +27,11 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
     private $result;
     private $logger;
 
+    /**
+     * @var bool the eev_ fields were checked in this process
+     */
+    private $fieldsChecked = false;
+
 
     private const CUSTOM_FIELDS = [
         'eev_result' => 'result',
@@ -97,11 +102,13 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
 
     private function ensureCustomFieldsExist()
     {
-        $fields = $this->fieldModel->getFieldList();
-        $existingFields = array_column($fields, 'alias');
+        if ($this->fieldsChecked) {
+            return;
+        }
+        $this->fieldsChecked = true;
 
         foreach (self::CUSTOM_FIELDS as $alias => $responseField) {
-            if (!in_array($alias, $existingFields)) {
+            if (!$this->fieldModel->getEntityByAlias($alias)) {
                 $field = new LeadField();
                 $field->setAlias($alias);
                 $field->setLabel('EEV_' . $responseField);
