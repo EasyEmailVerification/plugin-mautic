@@ -1,7 +1,5 @@
 <?php
 
-use Mautic\CampaignBundle\CampaignEvents;
-
 return [
     'name'        => 'Easy Email Verification Integration',
     'description' => 'Integrates Mautic with the Easy Email Verification service to verify email addresses and ensure their validity within campaigns.',
@@ -70,16 +68,6 @@ return [
 
     'parameters' => [
         'mautic_plugin_easy_apikey' => 'your_saved_api_key', // Replace this with the actual API key
-    ],
-
-    'campaign' => [
-        'events' => [
-            'email_verification' => [
-                'label'       => 'mautic.easybundle.condition.email_verification',
-                'description' => 'Checks if the email is verified',
-                'eventName'   => CampaignEvents::ON_EVENT_CONDITION_EVALUATION,
-            ],
-        ],
     ],
 
     'menu' => [

@@ -4,7 +4,6 @@ namespace MauticPlugin\MauticEasyBundle\Conditions;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
-use Mautic\CampaignBundle\CampaignEvents;
 use Mautic\CampaignBundle\Event\ConditionEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Mautic\PluginBundle\Helper\IntegrationHelper;
@@ -21,6 +20,8 @@ use MauticPlugin\MauticEasyBundle\Integration\EasyIntegration;
 
 class CheckEmailVerificationCondition implements EventSubscriberInterface
 {
+    public const ON_EVALUATE = 'mautic.plugin.easy.on_email_verification_condition';
+
     private $apikey;
     private $leadModel;
     private $fieldModel;
@@ -95,7 +96,7 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
     public static function getSubscribedEvents()
     {
         return [
-            CampaignEvents::ON_EVENT_CONDITION_EVALUATION => ['onConditionValidate', 0],
+            self::ON_EVALUATE => ['onConditionValidate', 0],
         ];
     }
 
