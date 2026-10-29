@@ -204,7 +204,8 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
                     // in a header, not in the query string, so the key stays out of URLs, proxy and server logs
                     'X-API-Key' => $this->apikey,
                 ],
-                'timeout' => 30,
+                'connect_timeout' => 10,
+                'timeout'         => 30,
             ]);
 
             $body = $response->getBody();
