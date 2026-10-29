@@ -19,6 +19,7 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
 {
     public const ON_EVALUATE = 'mautic.plugin.easy.on_email_verification_condition';
 
+    private $integrationHelper;
     private $apikey;
     private $leadModel;
     private $fieldModel;
@@ -52,34 +53,38 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
         FieldModel $fieldModel,
         LoggerInterface $logger
     ) {
-        $this->logger = $logger;
+        $this->integrationHelper = $integrationHelper;
+        $this->leadModel         = $leadModel;
+        $this->fieldModel        = $fieldModel;
+        $this->logger            = $logger;
+    }
 
-        $integration = $integrationHelper->getIntegrationObject('Easy');
+    /**
+     * Reads the API key and the decision settings. Done when the condition runs, not when the service is built,
+     * so a long-running process sees settings saved after it started.
+     */
+    private function loadSettings(): bool
+    {
+        $integration = $this->integrationHelper->getIntegrationObject('Easy');
+        if (!$integration instanceof EasyIntegration) {
+            $this->logger->error('Easy Email Verification: the integration is not installed.');
 
-        if ($integration === null) {
-            $this->logger->error('Easy integration is not initialized correctly.');
-            return;
+            return false;
         }
 
-        $settings = $integration->getIntegrationSettings()->getFeatureSettings();
-
-        // get the key
         $this->apikey = $integration->getKeys();
         if (!$this->apikey) {
-            $this->logger->error('API key is missing.');
+            $this->logger->error('Easy Email Verification: API key is missing.');
+
+            return false;
         }
 
-        $this->leadModel = $leadModel;
-        $this->fieldModel = $fieldModel;
+        // Defaults are the ones the settings form shows before it is first saved
+        $settings         = $integration->getIntegrationSettings()->getFeatureSettings() ?: [];
+        $this->safeToSend = $settings['safe_to_send'] ?? true;
+        $this->result     = $settings['result'] ?? false;
 
-        $this->safeToSend = $settings['safe_to_send'];
-        $this->result = $settings['result'];
-
-        try {
-            $this->ensureCustomFieldsExist();
-        } catch (\Exception $e) {
-            $this->logger->error('Failed to ensure custom fields exist: ' . $e->getMessage());
-        }
+        return true;
     }
 
 
@@ -120,6 +125,18 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
 
     public function onConditionValidate(ConditionEvent $event)
     {
+        if (!$this->loadSettings()) {
+            $event->setResult(false);
+
+            return false;
+        }
+
+        try {
+            $this->ensureCustomFieldsExist();
+        } catch (\Exception $e) {
+            $this->logger->error('Easy Email Verification: failed to ensure custom fields exist: ' . $e->getMessage());
+        }
+
         // Get the lead (contact) from the event
         $lead = $event->getLead();
         // Get the email address of the lead
