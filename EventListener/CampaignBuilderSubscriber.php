@@ -22,7 +22,7 @@ class CampaignBuilderSubscriber implements EventSubscriberInterface
             'email_verification', // The key of the condition
             [
                 'label' => 'mautic.easybundle.condition.email_verification', // The label of the condition
-                'description' => 'Checks if the email is verified', // Description of the condition
+                'description' => 'mautic.easybundle.condition.email_verification.descr', // Description of the condition
                 // Own event name: Mautic also dispatches the generic ON_EVENT_CONDITION_EVALUATION for every
                 // condition of every campaign, so listening to it would change the result of other conditions.
                 'eventName' => CheckEmailVerificationCondition::ON_EVALUATE,
