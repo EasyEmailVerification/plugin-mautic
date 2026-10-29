@@ -16,6 +16,9 @@ class CampaignBuilderSubscriber implements EventSubscriberInterface
         ];
     }
 
+    /**
+     * @return void
+     */
     public function onCampaignBuild(CampaignBuilderEvent $event)
     {
         $event->addCondition(

@@ -28,7 +28,7 @@ class EasyIntegration extends AbstractIntegration
      * Return array of key => label elements that will be converted to inputs to
      * obtain from the user.
      *
-     * @return array
+     * @return array<string, string>
      */
     public function getRequiredKeyFields()
     {
@@ -38,9 +38,11 @@ class EasyIntegration extends AbstractIntegration
     }
 
     /**
-     * @param FormBuilder|Form $builder
-     * @param array            $data
-     * @param string           $formArea
+     * @param FormBuilder|Form     $builder
+     * @param array<string, mixed> $data
+     * @param string               $formArea
+     *
+     * @return void
      */
     public function appendToForm(&$builder, $data, $formArea)
     {
@@ -78,9 +80,9 @@ class EasyIntegration extends AbstractIntegration
     /**
      * {@inheritdoc}
      *
-     * @param $section
+     * @param string $section
      *
-     * @return string|array
+     * @return string|array<mixed>
      */
     public function getFormNotes($section)
     {

@@ -25,12 +25,39 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
      */
     public const REUSE_SECONDS = 2592000;
 
+    /**
+     * @var IntegrationHelper
+     */
     private $integrationHelper;
+
+    /**
+     * @var string|null
+     */
     private $apikey;
+
+    /**
+     * @var LeadModel
+     */
     private $leadModel;
+
+    /**
+     * @var FieldModel
+     */
     private $fieldModel;
+
+    /**
+     * @var mixed "Safe to send" decides (feature setting, yes/no)
+     */
     private $safeToSend;
+
+    /**
+     * @var mixed "Result" decides (feature setting, yes/no)
+     */
     private $result;
+
+    /**
+     * @var LoggerInterface
+     */
     private $logger;
 
     /**
@@ -113,6 +140,9 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
         ];
     }
 
+    /**
+     * @return void
+     */
     private function ensureCustomFieldsExist()
     {
         if ($this->fieldsChecked) {
@@ -143,6 +173,9 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
 
 
 
+    /**
+     * @return bool the condition result, also set on the event
+     */
     public function onConditionValidate(ConditionEvent $event)
     {
         if (!$this->loadSettings()) {
