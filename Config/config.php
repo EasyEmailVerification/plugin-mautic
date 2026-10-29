@@ -19,10 +19,6 @@ return [
             ],
             'mautic.plugin.easy.campaign.builder.subscriber' => [
                 'class'     => \MauticPlugin\MauticEasyBundle\EventListener\CampaignBuilderSubscriber::class,
-                'arguments' => [
-                    'event_dispatcher',
-                    'translator',
-                ],
             ],
         ],
 
