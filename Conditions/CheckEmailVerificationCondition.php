@@ -195,17 +195,14 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
     private function checkEmailVerification($email)
     {
         $client = new Client();
-        $query = [
-            'apikey' => $this->apikey,
-            'email' => $email,
-        ];
-
-        $url = 'https://api.easyemailverification.com/v1/verify?' . http_build_query($query);
+        $url    = 'https://api.easyemailverification.com/v1/verify?' . http_build_query(['email' => $email]);
 
         try {
             $response = $client->request('GET', $url, [
                 'headers' => [
-                    'Accept' => 'application/json',
+                    'Accept'    => 'application/json',
+                    // in a header, not in the query string, so the key stays out of URLs, proxy and server logs
+                    'X-API-Key' => $this->apikey,
                 ],
                 'timeout' => 30,
             ]);
@@ -216,7 +213,7 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
             // Return the verification data
             return $data;
         } catch (RequestException $e) {
-            // Not $e->getMessage(): it contains the request URL, with the email address and the API key
+            // Not $e->getMessage(): it contains the request URL, with the email address
             $this->logger->error('Easy Email Verification: request failed (' . get_class($e) . ', HTTP ' . $e->getCode() . ')');
             return true;
         }
