@@ -51,27 +51,4 @@ return [
         ],
     ],
 
-    'parameters' => [
-        'mautic_plugin_easy_apikey' => 'your_saved_api_key', // Replace this with the actual API key
-    ],
-
-    'settings' => [
-        'global' => [
-            'apikey' => [
-                'type'        => 'text',
-                'label'       => 'API Key',
-                'required'    => true,
-                'attr'        => [
-                    'class'       => 'form-control',
-                ],
-                'tooltip'     => 'Enter your API key for Easy Email Verification.',
-                'input_group' => [
-                    'pre' => 'fa fa-key',
-                ],
-                'constraints' => [
-                    'notblank' => true,
-                ],
-            ],
-        ],
-    ],
 ];
