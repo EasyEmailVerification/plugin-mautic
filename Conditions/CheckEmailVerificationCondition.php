@@ -3,7 +3,7 @@
 namespace MauticPlugin\MauticEasyBundle\Conditions;
 
 use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Exception\GuzzleException;
 use Mautic\CampaignBundle\Event\ConditionEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Mautic\PluginBundle\Helper\IntegrationHelper;
@@ -160,8 +160,21 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
             }
         }
 
-        // Perform your email verification logic here and set the result
+        if (!$email) {
+            $this->logger->debug('Easy Email Verification: contact ' . $lead->getId() . ' has no email address');
+            $event->setResult(false);
+
+            return false;
+        }
+
         $verificationData = $this->checkEmailVerification($email);
+
+        // No answer from the API: the contact fails and its eev_ fields are kept, so it is verified again next time
+        if (null === $verificationData) {
+            $event->setResult(false);
+
+            return false;
+        }
 
         // Update the lead with verification data
         foreach (self::CUSTOM_FIELDS as $field => $responseField) {
@@ -214,7 +227,11 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
     }
 
 
-    private function checkEmailVerification($email)
+    /**
+     * @return array<string, mixed>|null the API answer, or null when there is none: request error, timeout,
+     *                                   API error (invalid key, no credits, ...) or a response without a result
+     */
+    private function checkEmailVerification(string $email): ?array
     {
         $client = new Client();
         $url    = 'https://api.easyemailverification.com/v1/verify?' . http_build_query(['email' => $email]);
@@ -228,17 +245,29 @@ class CheckEmailVerificationCondition implements EventSubscriberInterface
                 ],
                 'connect_timeout' => 10,
                 'timeout'         => 30,
+                // API errors come as JSON with success=false and a message; read them instead of an exception
+                'http_errors'     => false,
             ]);
+        } catch (GuzzleException $e) {
+            // Also timeouts and connection errors (ConnectException is not a RequestException in Guzzle 7).
+            // Not $e->getMessage(): it contains the request URL, with the email address.
+            $this->logger->error('Easy Email Verification: request failed (' . get_class($e) . ')');
 
-            $body = $response->getBody();
-            $data = json_decode($body, true);
-
-            // Return the verification data
-            return $data;
-        } catch (RequestException $e) {
-            // Not $e->getMessage(): it contains the request URL, with the email address
-            $this->logger->error('Easy Email Verification: request failed (' . get_class($e) . ', HTTP ' . $e->getCode() . ')');
-            return true;
+            return null;
         }
+
+        $data = json_decode((string) $response->getBody(), true);
+
+        if (!is_array($data) || true !== ($data['success'] ?? null) || !is_string($data['result'] ?? null)) {
+            $this->logger->error(sprintf(
+                'Easy Email Verification: API error (HTTP %d): %s',
+                $response->getStatusCode(),
+                is_array($data) && isset($data['message']) ? $data['message'] : 'invalid response'
+            ));
+
+            return null;
+        }
+
+        return $data;
     }
 }
