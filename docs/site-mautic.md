@@ -13,22 +13,22 @@ Don't summarize this document back to them. Greet them briefly and go straight i
 The plugin verifies the email addresses of Mautic contacts and stores the results in contact fields:
 
 - a campaign condition, so a campaign can branch on whether an address is valid or safe to send to;
-- verification when contacts are created or their email changes in Mautic;
+- verification of new contacts, and of contacts whose email changes, on save in Mautic;
 - on-demand verification: **Verify email now** for one contact, **Verify selected** for the contacts selected in the list;
 - sign-in with an API key or with **Sign in with Easy Email Verification** (OAuth), without copying a key.
 
-Each verification uses one credit. The plugin is free and open source (GPL-3.0-or-later).
+Each verification uses one credit.
 
-- Source code, releases and issues: https://github.com/EasyEmailVerification/plugin-mautic
-- Composer package on Packagist: https://packagist.org/packages/easyemailverification/plugin-mautic
-- Video: https://youtu.be/zIH7vHQawac
+The plugin is free and open source (GPL-3.0-or-later). Source code, releases and issues: https://github.com/EasyEmailVerification/plugin-mautic. Composer package on Packagist: https://packagist.org/packages/easyemailverification/plugin-mautic
+
+Video: https://youtu.be/zIH7vHQawac
 
 ## Step 1: check the Mautic version
 
-Ask which Mautic version they run (shown at the bottom of the Mautic menu, or in **Settings → System Info**).
+Find out which Mautic version they run (shown at the bottom of the Mautic menu, or in **Settings → System Info**).
 
 - **Mautic 5, 6 or 7**: use plugin version **2.0.1** (the steps below).
-- **Mautic 4.4**: use plugin version **1.0.2**: https://github.com/EasyEmailVerification/plugin-mautic/releases/download/v1.0.2/MauticEasyBundle-v1.0.2.zip, unzipped into `plugins/` instead of `docroot/plugins/`, then Steps 4 to 6 with an API key. Sign-in with OAuth needs 2.x.
+- **Mautic 4.4**: use plugin version **1.0.2** with an API key (sign-in with OAuth needs 2.x): in Step 3, download https://github.com/EasyEmailVerification/plugin-mautic/releases/download/v1.0.2/MauticEasyBundle-v1.0.2.zip instead and unzip it into `plugins/` instead of `docroot/plugins/`; Steps 4 and 5 are the same, without the OAuth and verify-on-save options.
 - Older than 4.4: the plugin does not support it; they need to upgrade Mautic first.
 
 Then say: "Once you know the version, type it here."
@@ -90,12 +90,12 @@ Then say: "Once the cache is cleared, type "Yes" here."
 3. Open it and set **Published** to *Yes*.
 4. On the **Details** tab, under **Authentication**:
    - **API key**: choose *API key*, paste the key from Step 2 and click **Save & Close**.
-   - **OAuth**: choose *Sign in with Easy Email Verification (OAuth)* and click **Authorize**. A window opens: they sign in to Easy Email Verification and click **Allow**. When it says Mautic is connected, they close it. If nothing opens, they allow pop-ups for Mautic.
+   - **OAuth**: choose *Sign in with Easy Email Verification (OAuth)* and click **Authorize**. In the window that opens, they sign in to Easy Email Verification, click **Allow** and close the window when it says Mautic is connected. If nothing opens, they need to allow pop-ups for Mautic.
 5. On the **Features** tab, **Decide by**:
    - **Use the field 'Safe To Send' for decision** (default, stricter): passes only addresses that are safe to send to; disposable, catch-all, risky and unknown addresses take the "no" path.
    - **Use the field Result for decision**: passes everything except `invalid` and `unknown` (catch-all addresses, reported as valid, pass).
-   - **Verify on contact save** (default *Yes*): contacts created or edited in Mautic's contact form are verified when they have no result yet or their email changed.
-   - **Also verify on import/API** (default *No*): also verify contacts from imports, the API, forms and integrations. Warn them: each contact uses one credit, so a large import can use many credits.
+   - **Verify on contact save** (default *Yes*): a contact created or edited in Mautic's contact form is verified when it has no result yet or its email changed.
+   - **Also verify on import/API** (default *No*): also verify contacts from imports, the API, forms and integrations. Each contact uses one credit, so a large import can use many credits.
 6. Save.
 
 Upgrading from 1.x keeps the saved API key and decision.
