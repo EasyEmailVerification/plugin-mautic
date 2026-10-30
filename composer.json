@@ -27,13 +27,13 @@
         "install-directory-name": "MauticEasyBundle"
     },
     "require": {
-        "php": ">=7.4 <8.1",
+        "php": ">=8.0.2 <8.6",
         "ext-json": "*",
-        "mautic/core-lib": "^4.4"
+        "mautic/core-lib": "^5.0 || ^6.0 || ^7.0"
     },
     "require-dev": {
-        "phpstan/phpstan": "^1.10",
-        "phpunit/phpunit": "^9.5"
+        "phpstan/phpstan": "^2.1",
+        "phpunit/phpunit": "^9.6"
     },
     "autoload": {
         "psr-4": {
@@ -50,9 +50,6 @@
     },
     "config": {
         "sort-packages": true,
-        "platform": {
-            "php": "7.4.33"
-        },
         "audit": {
             "block-insecure": false
         },
@@ -61,13 +58,22 @@
             "composer/package-versions-deprecated": true,
             "mautic/composer-plugin": false,
             "php-http/discovery": false,
-            "symfony/flex": false
+            "symfony/flex": false,
+            "symfony/runtime": false
         }
     },
     "repositories": [
         {
             "type": "git",
             "url": "https://github.com/mautic/FOSOAuthServerBundle.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/mautic/SpBundle.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/mautic/SymfonyBridgeBundle.git"
         }
     ],
     "minimum-stability": "dev",
