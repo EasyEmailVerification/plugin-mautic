@@ -14,6 +14,8 @@ Version 1.x targets Mautic 4.4; version 2.x targets Mautic 5, 6 and 7.
 
 - The README lists the plugin's features at the top and describes on-demand verification of one contact
   (**Verify email now**) and of several contacts (**Verify selected**).
+- The README and the setup guide link to the GitHub repository and the Packagist package; the setup guide lists the
+  new features.
 
 ## [2.0.0] - 2026-10-30
 

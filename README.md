@@ -12,9 +12,11 @@ and store the result in contact fields.
 - **Two ways to sign in**: an API key, or **Sign in with Easy Email Verification** (OAuth), which connects Mautic to
   your account without copying a key.
 
-Each verification uses one credit.
+Each verification uses one credit. The plugin is free and open source (GPL-3.0-or-later).
 
-Step-by-step setup guide: https://www.easyemailverification.com/mautic.md
+- Source code, releases and issues: https://github.com/EasyEmailVerification/plugin-mautic
+- Composer package on Packagist: https://packagist.org/packages/easyemailverification/plugin-mautic
+- Step-by-step setup guide: https://www.easyemailverification.com/mautic.md
 
 ## Compatibility
 
