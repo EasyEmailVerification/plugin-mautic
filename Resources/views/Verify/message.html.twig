@@ -1,0 +1,5 @@
+{# An error or summary of "Verify email now" / "Verify selected", kept in the modal until it is closed (flash messages disappear after 4 seconds) #}
+<div class="alert alert-{{ level }}">{{ message }}</div>
+<div class="text-right">
+    <button type="button" class="btn btn-default" data-dismiss="modal">{{ 'mautic.core.close'|trans }}</button>
+</div>

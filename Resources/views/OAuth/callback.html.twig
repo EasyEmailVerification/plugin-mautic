@@ -1,0 +1,25 @@
+{# Result of "Authorize": a page of its own, without Mautic's layout, so it renders the same on Mautic 5, 6 and 7 #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex">
+    <title>Easy Email Verification</title>
+    <style>
+        body { font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 32px 16px; background: #f5f6f8; color: #1f2328; }
+        .box { max-width: 480px; margin: 0 auto; background: #fff; border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }
+        h1 { font-size: 18px; margin: 0 0 12px; }
+        .success { color: #1a7f37; }
+        .error { color: #b42318; }
+        button { margin-top: 16px; padding: 8px 16px; font-size: 14px; border: 0; border-radius: 4px; background: #4e5d9d; color: #fff; cursor: pointer; }
+    </style>
+</head>
+<body>
+<div class="box">
+    <h1>Easy Email Verification</h1>
+    <p class="{{ error ? 'error' : 'success' }}">{{ message }}</p>
+    <button type="button" onclick="window.close();">{{ 'mautic.integration.closewindow'|trans }}</button>
+</div>
+</body>
+</html>
