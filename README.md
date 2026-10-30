@@ -1,8 +1,17 @@
 # Easy Email Verification for Mautic
 
-Verify email addresses inside Mautic campaigns with [Easy Email Verification](https://www.easyemailverification.com).
-The plugin adds a campaign **condition** that checks the contact's address and stores the result in contact
-fields, so a campaign can continue for deliverable addresses and handle the others (tag, remove, skip, ...).
+Verify the email addresses of your Mautic contacts with [Easy Email Verification](https://www.easyemailverification.com)
+and store the result in contact fields.
+
+- **Campaign condition**: checks the contact's address, so a campaign can continue for deliverable addresses and
+  handle the others (tag, remove, skip, ...).
+- **Verification on contact save**: verifies new contacts, and contacts whose email changed, when they are saved in
+  Mautic.
+- **On-demand verification**: **Verify email now** verifies one contact from its page or the contact list, and
+  **Verify selected** verifies the contacts selected in the list.
+- **Two ways to sign in**: an API key, or **Sign in with Easy Email Verification** (OAuth), which connects Mautic to
+  your account without copying a key.
+
 Each verification uses one credit.
 
 Step-by-step setup guide: https://www.easyemailverification.com/mautic.md
@@ -120,14 +129,20 @@ Also on the **Features** tab:
 
 The verification waits for the API for up to 15 seconds; saving a contact takes that much longer when it is verified.
 
-### Verify email now
+### On-demand verification
 
-On a contact's page, and in each row of the contact list, **Verify email now** verifies the address right away and
-shows the result (`valid`, `invalid` or `unknown`, and safe to send) or the error. It always calls the API, even for a
-recent result, and uses one credit. In the contact list, select contacts and click **Verify selected** (in the bar that
-appears above the list on Mautic 6 and 7, in the mass actions menu on Mautic 5): the confirmation shows how many credits it uses (one per selected contact with an email, at most 100 at a
-time). The action needs permission to edit the contact, and is disabled for a contact without email or when the plugin
-is not set up and published.
+Verify contacts right away, outside campaigns. On-demand verification always calls the API, even for a recent
+result, and stores the answer in the contact fields. It needs permission to edit the contacts and a plugin that is
+set up and published.
+
+**One contact.** On a contact's page, next to **Edit**, or in the menu of each row of the contact list, click
+**Verify email now** and confirm. Mautic shows the result (`valid`, `invalid` or `unknown`, and safe to send) or the
+error. It uses one credit. The button is disabled, with the reason as its tooltip, for a contact without email.
+
+**Several contacts.** In the contact list, select contacts and click **Verify selected**: in the bar that appears
+above the list on Mautic 6 and 7, in the mass actions menu on Mautic 5. The confirmation shows how many credits it
+uses: one per selected contact with an email, at most 100 contacts at a time. When it finishes, a summary shows how
+many contacts were verified, failed or had no email.
 
 ### Testing without credits
 
