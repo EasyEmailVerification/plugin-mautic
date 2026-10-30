@@ -10,9 +10,18 @@ Don't summarize this document back to them. Greet them briefly and go straight i
 
 ## What it does
 
-The plugin adds an email verification condition to Mautic campaigns and stores the results in contact fields, so a campaign can branch on whether an address is valid or safe to send to. Each verification uses one credit.
+The plugin verifies the email addresses of Mautic contacts and stores the results in contact fields:
 
-Video: https://youtu.be/zIH7vHQawac
+- a campaign condition, so a campaign can branch on whether an address is valid or safe to send to;
+- verification when contacts are created or their email changes in Mautic;
+- on-demand verification: **Verify email now** for one contact, **Verify selected** for the contacts selected in the list;
+- sign-in with an API key or with **Sign in with Easy Email Verification** (OAuth), without copying a key.
+
+Each verification uses one credit. The plugin is free and open source (GPL-3.0-or-later).
+
+- Source code, releases and issues: https://github.com/EasyEmailVerification/plugin-mautic
+- Composer package on Packagist: https://packagist.org/packages/easyemailverification/plugin-mautic
+- Video: https://youtu.be/zIH7vHQawac
 
 ## Step 1: check the Mautic version
 
