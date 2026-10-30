@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MauticPlugin\MauticEasyBundle\EventListener;
 
 use Mautic\CampaignBundle\CampaignEvents;
@@ -9,26 +11,23 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class CampaignBuilderSubscriber implements EventSubscriberInterface
 {
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             CampaignEvents::CAMPAIGN_ON_BUILD => ['onCampaignBuild', 0],
         ];
     }
 
-    /**
-     * @return void
-     */
-    public function onCampaignBuild(CampaignBuilderEvent $event)
+    public function onCampaignBuild(CampaignBuilderEvent $event): void
     {
         $event->addCondition(
-            'email_verification', // The key of the condition
+            'email_verification',
             [
-                'label' => 'mautic.easybundle.condition.email_verification', // The label of the condition
-                'description' => 'mautic.easybundle.condition.email_verification.descr', // Description of the condition
+                'label'       => 'mautic.easybundle.condition.email_verification',
+                'description' => 'mautic.easybundle.condition.email_verification.descr',
                 // Own event name: Mautic also dispatches the generic ON_EVENT_CONDITION_EVALUATION for every
                 // condition of every campaign, so listening to it would change the result of other conditions.
-                'eventName' => CheckEmailVerificationCondition::ON_EVALUATE,
+                'eventName'   => CheckEmailVerificationCondition::ON_EVALUATE,
             ]
         );
     }

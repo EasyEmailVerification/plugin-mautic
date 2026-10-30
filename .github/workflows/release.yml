@@ -1,9 +1,10 @@
 name: Release
 
+# 2.x only: tags of the 1.x line run the release workflow of the 1.x branch
 on:
   push:
     tags:
-      - 'v*'
+      - 'v2.*'
 
 permissions:
   contents: write
@@ -25,7 +26,7 @@ jobs:
 
       - name: Build MauticEasyBundle-v${{ env.VERSION }}.zip
         run: |
-          # git archive leaves out the export-ignore paths (Tests/, .github/, dev files)
+          # git archive leaves out the export-ignore paths (Tests/, .github/, docs/, dev files)
           mkdir -p build/MauticEasyBundle
           git archive HEAD | tar -x -C build/MauticEasyBundle
           cd build

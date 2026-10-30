@@ -4,9 +4,50 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-Version 1.x targets Mautic 4.4; version 2.x targets Mautic 7.
+Version 1.x targets Mautic 4.4; version 2.x targets Mautic 5, 6 and 7.
 
 ## [Unreleased]
+
+## [2.0.0] - 2026-10-29
+
+### Breaking
+
+- Requires Mautic 5, 6 or 7 and PHP 8.0 or later. Mautic 4.4 users stay on 1.x (`composer require
+  easyemailverification/plugin-mautic:^1.0`), which keeps receiving security and bug fixes.
+
+### Added
+
+- Support for Mautic 5.0 – 5.2, 6.0 and 7.0 – 7.2 in one release line, tested in CI against each of them.
+- "Sign in with Easy Email Verification" (OAuth 2.0) as an alternative to the API key: click **Authorize** in the
+  plugin settings, sign in and allow access. It uses the same authorization server as the Easy Email Verification
+  connector for ChatGPT and Claude (dynamic client registration per Mautic, PKCE, scope `verify`). Tokens are stored
+  encrypted by Mautic, refreshed automatically and revoked by **Disconnect**. Verifications through OAuth use
+  credits of the connected account.
+- Verification when a contact is saved in Mautic's contact form (new, edit, quick add): when it has no result yet or
+  its email changed; never twice for the same email. On by default ("Verify on contact save"). Imports, the API,
+  forms, integrations and campaign actions are verified only with "Also verify on import/API" (off by default). A
+  failed verification never blocks the save: the contact is kept and the error is logged.
+- **Verify email now** on the contact page and in the contact list's row actions, and **Verify selected** for the
+  contacts selected in the list: verifies right away, ignoring the 30-day reuse, and shows the result. Requires permission to edit the
+  contact.
+- Integration tests that install the plugin in the official Mautic 5, 6 and 7 Docker images and run the condition,
+  the verification on save and the settings form with the sandbox key.
+
+### Changed
+
+- Rebuilt on Mautic's IntegrationsBundle: settings on the **Details** tab (authentication) and the **Features** tab
+  (decision), services in `Config/services.php` with autowiring, no PHP templates.
+- The two "decide by" yes/no switches are now one choice: **Safe To Send** (default) or **Result**. Settings saved by
+  1.x keep working and show the mode they selected; existing API keys are kept on upgrade.
+- The API key field no longer shows the saved key; leave it blank to keep it.
+- The campaign builder shows the condition as "Easy Email Verification" instead of
+  `mautic.campaign.email_verification`.
+
+### Unchanged
+
+- The campaign condition and its results: the `eev_` contact fields and how they are filled, reuse of a result
+  younger than 30 days, verification again after a domain change, the "no" path with fields left unchanged when the
+  API cannot answer, timeouts, and logging without contact data or credentials.
 
 ## [1.0.2] - 2026-10-29
 
@@ -45,6 +86,7 @@ Version 1.x targets Mautic 4.4; version 2.x targets Mautic 7.
 - Initial release for Mautic 4: campaign condition "Easy Email Verification", decision by "safe to send" or by
   "result", and the `eev_` contact fields with the verification results.
 
-[Unreleased]: https://github.com/EasyEmailVerification/plugin-mautic/compare/v1.0.2...HEAD
+[Unreleased]: https://github.com/EasyEmailVerification/plugin-mautic/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/EasyEmailVerification/plugin-mautic/releases/tag/v2.0.0
 [1.0.2]: https://github.com/EasyEmailVerification/plugin-mautic/releases/tag/v1.0.2
 [1.0.1]: https://www.easyemailverification.com/download/MauticEasyBundle-v1.0.1.zip

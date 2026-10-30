@@ -6,6 +6,7 @@
 /phpunit.xml.dist    export-ignore
 /phpstan.neon        export-ignore
 /CONTRIBUTING.md     export-ignore
+/docs/               export-ignore
 
 * text=auto eol=lf
 *.png binary
