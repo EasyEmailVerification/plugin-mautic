@@ -10,16 +10,25 @@ Don't summarize this document back to them. Greet them briefly and go straight i
 
 ## What it does
 
-The plugin adds an email verification condition to Mautic campaigns and stores the results in contact fields, so a campaign can branch on whether an address is valid or safe to send to. Each verification uses one credit.
+The plugin verifies the email addresses of Mautic contacts and stores the results in contact fields:
 
-Video: https://youtu.be/zIH7vHQawac
+- a campaign condition, so a campaign can branch on whether an address is valid or safe to send to;
+- verification when contacts are created or their email changes in Mautic;
+- on-demand verification: **Verify email now** for one contact, **Verify selected** for the contacts selected in the list;
+- sign-in with an API key or with **Sign in with Easy Email Verification** (OAuth), without copying a key.
+
+Each verification uses one credit. The plugin is free and open source (GPL-3.0-or-later).
+
+- Source code, releases and issues: https://github.com/EasyEmailVerification/plugin-mautic
+- Composer package on Packagist: https://packagist.org/packages/easyemailverification/plugin-mautic
+- Video: https://youtu.be/zIH7vHQawac
 
 ## Step 1: check the Mautic version
 
 Ask which Mautic version they run (shown at the bottom of the Mautic menu, or in **Settings → System Info**).
 
-- **Mautic 5, 6 or 7**: use plugin version **2.0.0** (the steps below).
-- **Mautic 4.4**: use plugin version **1.0.2**: https://github.com/EasyEmailVerification/plugin-mautic/releases/download/v1.0.2/MauticEasyBundle-v1.0.2.zip, unzipped into `plugins/` instead of `docroot/plugins/`, then Steps 4 to 6 with an API key. Sign-in with OAuth needs 2.0.0.
+- **Mautic 5, 6 or 7**: use plugin version **2.0.1** (the steps below).
+- **Mautic 4.4**: use plugin version **1.0.2**: https://github.com/EasyEmailVerification/plugin-mautic/releases/download/v1.0.2/MauticEasyBundle-v1.0.2.zip, unzipped into `plugins/` instead of `docroot/plugins/`, then Steps 4 to 6 with an API key. Sign-in with OAuth needs 2.x.
 - Older than 4.4: the plugin does not support it; they need to upgrade Mautic first.
 
 Then say: "Once you know the version, type it here."
@@ -44,23 +53,23 @@ php bin/console cache:clear
 
 **From the zip file**:
 
-1. Download the plugin: https://github.com/EasyEmailVerification/plugin-mautic/releases/download/v2.0.0/MauticEasyBundle-v2.0.0.zip
+1. Download the plugin: https://github.com/EasyEmailVerification/plugin-mautic/releases/download/v2.0.1/MauticEasyBundle-v2.0.1.zip
 2. Copy it to the `docroot/plugins/` directory of the Mautic installation:
 
 ```sh
-cp MauticEasyBundle-v2.0.0.zip /path/to/mautic/docroot/plugins/
+cp MauticEasyBundle-v2.0.1.zip /path/to/mautic/docroot/plugins/
 ```
 
 With Docker (official image, container named `mautic`):
 
 ```sh
-docker cp MauticEasyBundle-v2.0.0.zip mautic:/var/www/html/docroot/plugins/
+docker cp MauticEasyBundle-v2.0.1.zip mautic:/var/www/html/docroot/plugins/
 ```
 
 3. In the `docroot/plugins/` directory, unzip it so the folder `MauticEasyBundle` is created, and give it to the web server user. If a `MauticEasyBundle` folder from version 1.x is already there, move it out of `plugins/` first:
 
 ```sh
-unzip MauticEasyBundle-v2.0.0.zip
+unzip MauticEasyBundle-v2.0.1.zip
 chown -R www-data:www-data MauticEasyBundle
 ```
 

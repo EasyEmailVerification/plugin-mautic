@@ -12,7 +12,7 @@ body:
     attributes:
       label: Plugin version
       description: Settings → Plugins → Easy Email Verification, or the release you installed.
-      placeholder: 2.0.0
+      placeholder: 2.0.1
     validations:
       required: true
   - type: input

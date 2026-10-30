@@ -8,7 +8,16 @@ Version 1.x targets Mautic 4.4; version 2.x targets Mautic 5, 6 and 7.
 
 ## [Unreleased]
 
-## [2.0.0] - 2026-10-29
+## [2.0.1] - 2026-10-30
+
+### Documentation
+
+- The README lists the plugin's features at the top and describes on-demand verification of one contact
+  (**Verify email now**) and of several contacts (**Verify selected**).
+- The README and the setup guide link to the GitHub repository and the Packagist package; the setup guide lists the
+  new features.
+
+## [2.0.0] - 2026-10-30
 
 ### Breaking
 
@@ -86,7 +95,8 @@ Version 1.x targets Mautic 4.4; version 2.x targets Mautic 5, 6 and 7.
 - Initial release for Mautic 4: campaign condition "Easy Email Verification", decision by "safe to send" or by
   "result", and the `eev_` contact fields with the verification results.
 
-[Unreleased]: https://github.com/EasyEmailVerification/plugin-mautic/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/EasyEmailVerification/plugin-mautic/compare/v2.0.1...HEAD
+[2.0.1]: https://github.com/EasyEmailVerification/plugin-mautic/releases/tag/v2.0.1
 [2.0.0]: https://github.com/EasyEmailVerification/plugin-mautic/releases/tag/v2.0.0
 [1.0.2]: https://github.com/EasyEmailVerification/plugin-mautic/releases/tag/v1.0.2
 [1.0.1]: https://www.easyemailverification.com/download/MauticEasyBundle-v1.0.1.zip

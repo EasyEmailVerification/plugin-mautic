@@ -6,7 +6,7 @@ declare(strict_types=1);
 return [
     'name'        => 'Easy Email Verification Integration',
     'description' => 'Integrates Mautic with the Easy Email Verification service to verify email addresses and ensure their validity within campaigns.',
-    'version'     => '2.0.0',
+    'version'     => '2.0.1',
     'author'      => 'Easy Email Verification',
 
     'routes' => [
