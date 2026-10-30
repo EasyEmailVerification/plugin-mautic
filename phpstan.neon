@@ -1,11 +1,17 @@
-# Level 8 is the highest that passes without changing behavior: level 9 needs runtime checks on values
-# that Mautic 4's untyped APIs return as mixed.
 parameters:
     level: 8
     paths:
+        - Api
+        - Auth
         - Conditions
+        - Controller
         - Config
+        - DependencyInjection
         - EventListener
+        - Form
         - Integration
         - MauticEasyBundle.php
         - Tests
+    excludePaths:
+        # runs inside an installed Mautic, whose container returns untyped services
+        - Tests/Integration
