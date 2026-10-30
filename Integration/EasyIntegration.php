@@ -1,98 +1,36 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MauticPlugin\MauticEasyBundle\Integration;
 
-use Mautic\CoreBundle\Form\Type\YesNoButtonGroupType;
-use Mautic\PluginBundle\Integration\AbstractIntegration;
-use Symfony\Component\Form\Form;
-use Symfony\Component\Form\FormBuilder;
+use Mautic\IntegrationsBundle\Integration\BasicIntegration;
+use Mautic\IntegrationsBundle\Integration\ConfigurationTrait;
+use Mautic\IntegrationsBundle\Integration\Interfaces\BasicInterface;
 
-class EasyIntegration extends AbstractIntegration
+class EasyIntegration extends BasicIntegration implements BasicInterface
 {
-    public function getName()
-    {
-        return 'Easy';
-    }
+    use ConfigurationTrait;
 
     /**
-     * Return's authentication method such as oauth2, oauth1a, key, etc.
-     *
-     * @return string
+     * Same name as in 1.x, so an upgrade keeps the saved settings and API key.
      */
-    public function getAuthenticationType()
+    public const NAME = 'Easy';
+
+    public const DISPLAY_NAME = 'Easy Email Verification';
+
+    public function getName(): string
     {
-        return 'none';
+        return self::NAME;
     }
 
-    /**
-     * Return array of key => label elements that will be converted to inputs to
-     * obtain from the user.
-     *
-     * @return array<string, string>
-     */
-    public function getRequiredKeyFields()
+    public function getDisplayName(): string
     {
-        return [
-            'apikey' => 'mautic.integration.easy.apikey',
-        ];
+        return self::DISPLAY_NAME;
     }
 
-    /**
-     * @param FormBuilder|Form     $builder
-     * @param array<string, mixed> $data
-     * @param string               $formArea
-     *
-     * @return void
-     */
-    public function appendToForm(&$builder, $data, $formArea)
+    public function getIcon(): string
     {
-        if ('features' === $formArea) {
-            $builder->add('safe_to_send', YesNoButtonGroupType::class, [
-                'label' => 'mautic.integration.easy.safe_to_send',
-                'data'  => isset($data['safe_to_send']) ? $data['safe_to_send'] : true,
-                'attr'  => [
-                    'tooltip' => 'mautic.integration.easy.safe_to_send',
-                    'onchange' => "toggleSafeToSend(this.value)"
-                ],
-            ]);
-
-            $builder->add('result', YesNoButtonGroupType::class, [
-                'label' => 'mautic.integration.easy.result',
-                'data'  => isset($data['result']) ? $data['result'] : false,
-                'attr'  => [
-                    'tooltip' => 'mautic.integration.easy.result',
-                    'onchange' => "toggleResult(this.value)"
-                ],
-            ]);
-        }
-    }
-
-    /**
-     * Not named getKeys(): that is AbstractIntegration's method returning all the decrypted keys as an array.
-     */
-    public function getApiKey(): ?string
-    {
-        $keys = $this->getDecryptedApiKeys();
-
-        return $keys['apikey'] ?? null;
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @param string $section
-     *
-     * @return string|array<mixed>
-     */
-    public function getFormNotes($section)
-    {
-        if ('custom' === $section) {
-            return [
-                'template'   => 'MauticEasyBundle:Integration:form.html.php',
-                'parameters' => [],
-            ];
-        }
-
-        return parent::getFormNotes($section);
+        return 'plugins/MauticEasyBundle/Assets/img/easy.png';
     }
 }

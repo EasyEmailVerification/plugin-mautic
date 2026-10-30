@@ -11,22 +11,22 @@ body:
     id: plugin-version
     attributes:
       label: Plugin version
-      description: Settings → Plugins → Easy, or the release you installed.
-      placeholder: 1.0.2
+      description: Settings → Plugins → Easy Email Verification, or the release you installed.
+      placeholder: 2.0.0
     validations:
       required: true
   - type: input
     id: mautic-version
     attributes:
       label: Mautic version
-      placeholder: 4.4.12
+      placeholder: 7.2.2
     validations:
       required: true
   - type: input
     id: php-version
     attributes:
       label: PHP version
-      placeholder: "8.0.30"
+      placeholder: "8.3.27"
     validations:
       required: true
   - type: dropdown

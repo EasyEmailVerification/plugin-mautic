@@ -10,40 +10,39 @@ Step-by-step setup guide: https://www.easyemailverification.com/mautic.md
 ## Compatibility
 
 Plugin versions follow [semantic versioning](https://semver.org/) and are independent of Mautic's version
-numbers. Each major version targets one Mautic line:
+numbers.
 
 | Plugin | Mautic | PHP | Branch |
 |--------|--------|-----|--------|
+| 2.x    | 5.0 – 5.2, 6.0, 7.0 – 7.2 | the PHP versions of your Mautic (8.0 – 8.5) | `main` |
 | 1.x    | 4.4    | 7.4 – 8.0 | `1.x` |
-| 2.x    | 7      | 8.2+ | `main` (upcoming) |
 
-Version 1.x does not run on Mautic 5 or later. Mautic 4.4 itself is no longer maintained by the Mautic
-project; plan an upgrade to Mautic 7 and plugin 2.x.
+Version 2.x does not run on Mautic 4.4, and 1.x does not run on Mautic 5 or later. Upgrading Mautic from 4.4?
+Upgrade the plugin to 2.x at the same time: its settings and API key are kept.
 
 ## Installation
 
 ### With Composer
 
-In a Composer-based Mautic 4.4 installation:
+In a Composer-based Mautic installation (`mautic/recommended-project`):
 
 ```sh
-composer require easyemailverification/plugin-mautic:^1.0
+composer require easyemailverification/plugin-mautic:^2.0
 php bin/console cache:clear
 php bin/console mautic:plugins:reload
 ```
 
-Composer installs the plugin as `docroot/plugins/MauticEasyBundle` (the plugin directory of the
-`mautic/recommended-project` layout).
+Composer installs the plugin as `docroot/plugins/MauticEasyBundle`. On Mautic 4.4, use `:^1.0` instead.
 
 ### From the zip file
 
 1. Download `MauticEasyBundle-vX.Y.Z.zip` from the
    [latest release](https://github.com/EasyEmailVerification/plugin-mautic/releases).
-2. Unzip it into Mautic's `plugins/` directory, so that `plugins/MauticEasyBundle/MauticEasyBundle.php` exists,
-   and give the folder to the web server user:
+2. Unzip it into Mautic's plugin directory (`docroot/plugins/`), so that
+   `docroot/plugins/MauticEasyBundle/MauticEasyBundle.php` exists, and give the folder to the web server user:
 
    ```sh
-   cd /path/to/mautic/plugins
+   cd /path/to/mautic/docroot/plugins
    unzip MauticEasyBundle-vX.Y.Z.zip
    chown -R www-data:www-data MauticEasyBundle
    ```
@@ -51,10 +50,11 @@ Composer installs the plugin as `docroot/plugins/MauticEasyBundle` (the plugin d
    With the official Docker image (container named `mautic`):
 
    ```sh
-   docker cp MauticEasyBundle-vX.Y.Z.zip mautic:/var/www/html/plugins/
-   docker exec -w /var/www/html/plugins mautic sh -c 'unzip MauticEasyBundle-vX.Y.Z.zip && chown -R www-data:www-data MauticEasyBundle'
+   docker cp MauticEasyBundle-vX.Y.Z.zip mautic:/var/www/html/docroot/plugins/
+   docker exec -w /var/www/html/docroot/plugins mautic sh -c 'unzip MauticEasyBundle-vX.Y.Z.zip && chown -R www-data:www-data MauticEasyBundle'
    ```
 
+   When upgrading from 1.x, replace the old `MauticEasyBundle` folder (move it out of `plugins/` first).
 3. Clear the cache and register the plugin:
 
    ```sh
@@ -66,30 +66,87 @@ Composer installs the plugin as `docroot/plugins/MauticEasyBundle` (the plugin d
 
 ## Configuration
 
+In Mautic, open **Settings (gear icon) → Plugins → Easy Email Verification**, set **Published** to *Yes*, choose how
+the plugin signs in on the **Details** tab, and save.
+
+### With an API key
+
 1. Create an account at the [Easy Email Verification dashboard](https://dashboard.easyemailverification.com/register).
 2. In the dashboard, open **Integration → API Settings** and click **Create API Key**.
    Use an **API key**: a widget key does not work with the plugin.
-3. In Mautic, open **Settings → Plugins → Easy**, paste the key, set **Published** to *Yes* and save.
-4. In the **Features** tab, choose what decides the condition:
-   - **Use the field 'Safe To Send' for decision** (default): the address passes only when the API reports it as
-     safe to send. This is the stricter option: it also fails disposable, risky and unknown addresses.
-   - **Use the field Result for decision**: the address passes unless the result is `invalid` or `unknown`.
-     Accept-all (catch-all) addresses are reported as `valid` and pass.
+3. In the plugin settings, choose **Authentication: API key**, paste the key and save.
+
+The key is stored encrypted and is not shown again; leave the field blank to keep it.
+
+### With "Sign in with Easy Email Verification" (OAuth)
+
+No key to copy: Mautic connects to your account, as the Easy Email Verification connector for ChatGPT and Claude
+does. Mautic must be served over **https**.
+
+1. In the plugin settings, choose **Authentication: Sign in with Easy Email Verification (OAuth)** and click
+   **Authorize**.
+2. In the window that opens, sign in to Easy Email Verification and click **Allow**. The window shows "Mautic is
+   connected"; close it.
+3. The settings now say "This Mautic is connected with OAuth". Verifications use this connection.
+
+The connection appears in the dashboard under **Connected apps**. To disconnect, set **Disconnect from Easy Email
+Verification** to *Yes* in the plugin settings and save: Mautic revokes its tokens and goes back to the API key. You
+can also remove it from **Connected apps** in the dashboard; the next verification then takes the "no" path and
+logs that the connection was revoked.
+
+The plugin asks only for the `verify` permission. It stores the tokens encrypted with Mautic's other keys and
+renews them on its own; a connection unused for 30 days expires and needs **Authorize** again.
+
+### Decision mode
+
+On the **Features** tab, **Decide by** sets what makes a contact pass the condition:
+
+- **Use the field 'Safe To Send' for decision** (default): the address passes only when the API reports it as safe
+  to send. This is the stricter option: it also fails disposable, accept-all, risky and unknown addresses.
+- **Use the field Result for decision**: the address passes unless the result is `invalid` or `unknown`.
+  Accept-all (catch-all) addresses are reported as `valid` and pass.
+
+### Verification when contacts are saved
+
+Also on the **Features** tab:
+
+- **Verify on contact save** (default *Yes*): when a contact with an email is created or edited in Mautic's contact
+  form (new, edit, quick add), it is verified if it has no result yet or its email changed. A contact already
+  verified with the same email is not verified again, so saving it again uses no credit. The contact is saved first:
+  if the API cannot answer, it stays saved, its `eev_` fields are left unchanged and the error is logged.
+- **Also verify on import/API** (default *No*): also verify contacts saved by imports, the API, forms,
+  integrations, campaign actions and contact list batch actions, with the same rules. **Each contact verified uses one
+  credit**: an import of 10,000 new contacts uses up to 10,000 credits.
+
+The verification waits for the API for up to 15 seconds; saving a contact takes that much longer when it is verified.
+
+### Verify email now
+
+On a contact's page, and in each row of the contact list, **Verify email now** verifies the address right away and
+shows the result (`valid`, `invalid` or `unknown`, and safe to send) or the error. It always calls the API, even for a
+recent result, and uses one credit. In the contact list, select contacts and click **Verify selected** (in the bar that
+appears above the list on Mautic 6 and 7, in the mass actions menu on Mautic 5): the confirmation shows how many credits it uses (one per selected contact with an email, at most 100 at a
+time). The action needs permission to edit the contact, and is disabled for a contact without email or when the plugin
+is not set up and published.
 
 ### Testing without credits
 
 The sandbox API key `eev_sandbox_key` answers without using credits, for addresses at
-`sandbox.easyemailverification.com` only:
+`sandbox.easyemailverification.com` only. It works with the API key method; through OAuth every verification uses
+credits of the connected account.
 
-| Address | result | safe_to_send |
-|---------|--------|--------------|
-| `valid@sandbox.easyemailverification.com` | valid | true |
-| `disposable@sandbox.easyemailverification.com` | valid | false |
-| `catchall@sandbox.easyemailverification.com` | valid | false |
-| `invalid@sandbox.easyemailverification.com` | invalid | false |
-| `unknown@sandbox.easyemailverification.com` | unknown | false |
+| Address | result | safe_to_send | accept_all | Safe To Send mode | Result mode |
+|---------|--------|--------------|------------|-------------------|-------------|
+| `valid@sandbox.easyemailverification.com` | valid | true | false | yes | yes |
+| `disposable@sandbox.easyemailverification.com` | valid | false | false | no | yes |
+| `catchall@sandbox.easyemailverification.com` | valid | false | true | no | yes |
+| `invalid@sandbox.easyemailverification.com` | invalid | false | false | no | no |
+| `unknown@sandbox.easyemailverification.com` | unknown | false | false | no | no |
 
 ## Campaign condition
+
+The condition is not affected by the verification on save or by **Verify email now**, except that it reuses their
+results like any other.
 
 In the campaign builder, add the **Easy Email Verification** condition and connect its two paths: the "yes" path
 for addresses that pass and the "no" path for the others.
@@ -97,9 +154,9 @@ for addresses that pass and the "no" path for the others.
 - A contact verified less than **30 days** ago is not verified again: the stored result is reused, so no
   credit is spent. The result is verified again when the contact's address moves to another domain.
 - A contact without an email address takes the "no" path.
-- When the API cannot answer (timeout, connection error, invalid API key, no credits left), the contact takes the
-  "no" path, its fields are left unchanged and the error is written to Mautic's log. It is verified again the next
-  time a campaign reaches the condition.
+- When the API cannot answer (timeout, connection error, invalid API key, revoked or expired OAuth connection, no
+  credits left), the contact takes the "no" path, its fields are left unchanged and the error is written to Mautic's
+  log. It is verified again the next time a campaign reaches the condition.
 
 ## Contact fields
 
@@ -125,12 +182,17 @@ On the first evaluation the plugin creates these contact fields (group *Core*) a
 
 ## Troubleshooting
 
-- **The plugin does not appear in Settings → Plugins**: check that the folder is named exactly
-  `MauticEasyBundle`, that it contains `MauticEasyBundle.php`, and that the web server user owns it; then clear the
-  cache and click **Install/Upgrade Plugins** again.
+- **The plugin does not appear in Settings → Plugins**: check that the folder is `docroot/plugins/MauticEasyBundle`,
+  that it contains `MauticEasyBundle.php`, and that the web server user owns it; then clear the cache and click
+  **Install/Upgrade Plugins** again. Mautic 4.4 needs plugin 1.x.
 - **Every contact takes the "no" path**: look for `Easy Email Verification` in Mautic's log (`var/logs/`).
-  `API error (HTTP 401)` means the API key is wrong (or is a widget key); `API key is missing` means none is saved.
-- **"Running out of your credit limit"**: see the [plans](https://www.easyemailverification.com/en-US/pricing).
+  - `API error (HTTP 401)`: the API key is wrong (or is a widget key).
+  - `API key is missing`: none is saved, or **Authentication** is set to the method you did not configure.
+  - `not connected with OAuth` or `the OAuth connection was revoked or has expired`: click **Authorize** again.
+  - `API error (HTTP 402)` or "credits": see the [plans](https://www.easyemailverification.com/en-US/pricing).
+- **Authorize does nothing**: allow pop-ups for Mautic. An error such as "could not be registered" means Mautic is
+  not served over https, or is behind a proxy that Mautic does not trust (`trusted_proxies`), so it builds `http://`
+  addresses.
 - **The condition does not appear in the campaign builder**: clear the cache after installing or updating.
 
 Still stuck? Write to support@easyemailverification.com or
