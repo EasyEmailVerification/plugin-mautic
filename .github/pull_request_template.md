@@ -8,8 +8,8 @@
 
 ## Checklist
 
-- [ ] Targets the right branch (`1.x` for Mautic 4.4 fixes)
-- [ ] Compatible with PHP 7.4
+- [ ] Targets the right branch (`main` for 2.x, `1.x` for Mautic 4.4 fixes)
+- [ ] Compatible with PHP 8.0 and Mautic 5, 6 and 7 (2.x)
 - [ ] Tests added or updated, CI passes
 - [ ] `CHANGELOG.md` updated (`Unreleased` section)
 - [ ] No API keys, credentials or contact data in code, tests or logs
