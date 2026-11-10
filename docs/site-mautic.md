@@ -93,7 +93,7 @@ Then say: "Once the cache is cleared, type "Yes" here."
    - **OAuth**: choose *Sign in with Easy Email Verification (OAuth)* and click **Authorize**. In the window that opens, they sign in to Easy Email Verification, click **Allow** and close the window when it says Mautic is connected. If nothing opens, they need to allow pop-ups for Mautic.
 5. On the **Features** tab, **Decide by**:
    - **Use the field 'Safe To Send' for decision** (default, stricter): passes only addresses that are safe to send to; disposable, catch-all, risky and unknown addresses take the "no" path.
-   - **Use the field Result for decision**: passes everything except `invalid` and `unknown` (catch-all addresses, reported as valid, pass).
+   - **Use the field Result for decision**: passes everything except `invalid` and `unknown` (catch-all addresses come back as `unknown` and take the "no" path).
    - **Verify on contact save** (default *Yes*): a contact created or edited in Mautic's contact form is verified when it has no result yet or its email changed.
    - **Also verify on import/API** (default *No*): also verify contacts from imports, the API, forms and integrations. Each contact uses one credit, so a large import can use many credits.
 6. Save.

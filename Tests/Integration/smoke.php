@@ -189,7 +189,7 @@ $run = function (?string $email, string $decision, string $apiKey = 'eev_sandbox
 $expected = [
     'valid@sandbox.easyemailverification.com'      => ['valid', 'true', 'false', true, true],
     'disposable@sandbox.easyemailverification.com' => ['valid', 'false', 'false', false, true],
-    'catchall@sandbox.easyemailverification.com'   => ['valid', 'false', 'true', false, true],
+    'catchall@sandbox.easyemailverification.com'   => ['unknown', 'false', 'true', false, false],
     'invalid@sandbox.easyemailverification.com'    => ['invalid', 'false', 'false', false, false],
     'unknown@sandbox.easyemailverification.com'    => ['unknown', 'false', 'false', false, false],
 ];

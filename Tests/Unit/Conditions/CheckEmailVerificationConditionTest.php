@@ -175,12 +175,12 @@ class CheckEmailVerificationConditionTest extends TestCase
      *
      * @param array<string, mixed> $features
      */
-    public function testAcceptAllCountsAsValidInResultMode(array $features): void
+    public function testAcceptAllFailsInResultMode(array $features): void
     {
-        $answer = $this->apiAnswer('valid', false, ['accept_all' => true, 'reason' => 'low_quality']);
+        $answer = $this->apiAnswer('unknown', false, ['accept_all' => true, 'reason' => 'accept_all']);
         $event  = $this->evaluate($this->contact('anyone@catch-all.example'), [$answer], $features);
 
-        $this->assertTrue($event->wasConditionSatisfied());
+        $this->assertFalse($event->wasConditionSatisfied());
     }
 
     /**
@@ -190,7 +190,7 @@ class CheckEmailVerificationConditionTest extends TestCase
      */
     public function testAcceptAllFailsInSafeToSendMode(array $features): void
     {
-        $answer = $this->apiAnswer('valid', false, ['accept_all' => true, 'reason' => 'low_quality']);
+        $answer = $this->apiAnswer('unknown', false, ['accept_all' => true, 'reason' => 'accept_all']);
         $event  = $this->evaluate($this->contact('anyone@catch-all.example'), [$answer], $features);
 
         $this->assertFalse($event->wasConditionSatisfied());
@@ -395,8 +395,8 @@ class CheckEmailVerificationConditionTest extends TestCase
      */
     public function testOAuthUsesTheSameDecision(array $features): void
     {
-        $catchAll = $this->mcpAnswer('valid', false, ['accept_all' => true]);
-        $event    = $this->evaluate($this->contact('anyone@catch-all.example'), [$catchAll], $features, self::OAUTH_KEYS);
+        $disposable = $this->mcpAnswer('valid', false, ['disposable' => true]);
+        $event      = $this->evaluate($this->contact('anyone@mailinator.example'), [$disposable], $features, self::OAUTH_KEYS);
 
         $this->assertSame(in_array($features, [self::RESULT_MODE, self::RESULT_DECISION], true), $event->wasConditionSatisfied());
     }

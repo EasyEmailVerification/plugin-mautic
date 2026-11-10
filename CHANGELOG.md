@@ -8,6 +8,12 @@ Version 1.x targets Mautic 4.4; version 2.x targets Mautic 5, 6 and 7.
 
 ## [Unreleased]
 
+### Documentation
+
+- Catch-all addresses now come back from the API as `unknown` with the reason `accept_all` (no longer `valid`),
+  so they fail the condition in both decision modes. The README, the sandbox table and the setup guide say so, and
+  the tests use the new answer. The plugin code is unchanged: it already decides on the API's `result`.
+
 ## [2.0.1] - 2026-10-30
 
 ### Documentation

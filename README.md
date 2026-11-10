@@ -115,7 +115,7 @@ On the **Features** tab, **Decide by** sets what makes a contact pass the condit
 - **Use the field 'Safe To Send' for decision** (default): the address passes only when the API reports it as safe
   to send. This is the stricter option: it also fails disposable, accept-all, risky and unknown addresses.
 - **Use the field Result for decision**: the address passes unless the result is `invalid` or `unknown`.
-  Accept-all (catch-all) addresses are reported as `valid` and pass.
+  Accept-all (catch-all) addresses come back as `unknown` (reason `accept_all`) and fail.
 
 ### Verification when contacts are saved
 
@@ -156,7 +156,7 @@ credits of the connected account.
 |---------|--------|--------------|------------|-------------------|-------------|
 | `valid@sandbox.easyemailverification.com` | valid | true | false | yes | yes |
 | `disposable@sandbox.easyemailverification.com` | valid | false | false | no | yes |
-| `catchall@sandbox.easyemailverification.com` | valid | false | true | no | yes |
+| `catchall@sandbox.easyemailverification.com` | unknown | false | true | no | no |
 | `invalid@sandbox.easyemailverification.com` | invalid | false | false | no | no |
 | `unknown@sandbox.easyemailverification.com` | unknown | false | false | no | no |
 
